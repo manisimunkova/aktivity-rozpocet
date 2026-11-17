@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aktivity k rozpočtu – Nekrachni</title>
+<meta name="description" content="Interaktivní aktivity k workshopu Nekrachni o osobním rozpočtu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --lime: #A2E640; --purple: #67139F; --black: #0E0E0E; --bg: #f5f0fa; }
+  body { background: var(--bg); font-family: Geologica, system-ui, sans-serif; color: var(--black); }
+  header { background: var(--black); color: #fff; padding: 28px 20px 32px; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .brand { font-size: 20px; font-weight: 900; }
+  .brand span { color: var(--lime); }
+  h1 { font-size: 30px; font-weight: 900; margin-top: 18px; line-height: 1.15; }
+  header p { color: rgba(255,255,255,.7); margin-top: 8px; font-size: 16px; line-height: 1.5; }
+  main { padding: 24px 20px 48px; }
+  .list { display: grid; gap: 12px; }
+  a.item, .item {
+    display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit;
+    background: #fff; border-radius: 20px; padding: 18px; box-shadow: 0 4px 16px rgba(103,19,159,.08);
+  }
+  a.item:hover { box-shadow: 0 6px 22px rgba(103,19,159,.16); }
+  a.item:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+  .ico { font-size: 34px; width: 56px; height: 56px; border-radius: 16px; background: #f3edf9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .item h2 { font-size: 18px; font-weight: 800; }
+  .item p { font-size: 14px; color: #5b4d68; margin-top: 3px; line-height: 1.4; }
+  .soon { opacity: .55; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; padding: 3px 8px; border-radius: 999px; background: #efe7f7; color: var(--purple); margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand"><span>ø</span> Nekrachni</div>
+    <h1>Aktivity k workshopu o rozpočtu</h1>
+    <p>Pro 8. a 9. třídu. Otevři aktivitu, kterou zrovna děláme.</p>
+  </div>
+</header>
+<main>
+  <div class="wrap list">
+    <a class="item" href="swipe/">
+      <div class="ico">👆</div>
+      <div><h2>Nutné, nebo navíc?</h2><p>Swipe hra o tom, co opravdu potřebujeme.</p></div>
+    </a>
+    <div class="item soon">
+      <div class="ico">📲</div>
+      <div><h2>FOMO feed <span class="tag">brzy</span></h2><p>Na jaké triky reklam a sociálních sítí skočíš?</p></div>
+    </div>
+    <div class="item soon">
+      <div class="ico">💸</div>
+      <div><h2>Měsíc s kapesným <span class="tag">brzy</span></h2><p>Vyjdeš s penězi a ještě ušetříš na svůj cíl?</p></div>
+    </div>
+    <div class="item soon">
+      <div class="ico">⏱️</div>
+      <div><h2>Kolik hodin brigády to stojí? <span class="tag">brzy</span></h2><p>Přepočítej si věci, které chceš, na hodiny práce.</p></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

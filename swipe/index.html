@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nutné, nebo navíc? – Nekrachni</title>
+<meta name="description" content="Swipe hra z workshopu Nekrachni o osobním rozpočtu.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --lime: #A2E640;
+    --purple: #67139F;
+    --not: #AD8CCB;
+    --black: #0E0E0E;
+    --bg: #f5f0fa;
+    --card: #ffffff;
+    --muted: #6b5a7b;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    font-family: Geologica, system-ui, sans-serif;
+    color: var(--black);
+    display: flex; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    width: 100%; max-width: 440px;
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    background: #faf8fd;
+    overflow: hidden;
+  }
+  @media (min-width: 600px) {
+    body { padding: 32px 16px; align-items: flex-start; }
+    .app { min-height: 0; height: min(860px, calc(100dvh - 64px)); border-radius: 36px;
+           box-shadow: 0 0 0 10px #1c1c1e, 0 0 0 12px #3a3a3c, 0 32px 80px rgba(14,14,14,.35); }
+  }
+
+  header {
+    background: var(--black); color: #fff;
+    padding: 16px 20px 18px; flex-shrink: 0;
+  }
+  .brand { font-size: 20px; font-weight: 900; letter-spacing: -.5px; display: flex; gap: 6px; align-items: center; }
+  .brand .symbol { color: var(--lime); }
+  .head-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 12px; }
+  .round-label { font-size: 12px; font-weight: 800; color: var(--lime); text-transform: uppercase; letter-spacing: 1px; }
+  .progress-text { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.55); }
+  .bar { height: 6px; background: #2a2a2a; border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--lime); width: 0; transition: width .25s; }
+
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .screen { flex: 1; display: none; flex-direction: column; padding: 24px 20px; min-height: 0; }
+  .screen.active { display: flex; }
+  .scroll { overflow-y: auto; }
+
+  h1 { font-size: 30px; font-weight: 900; line-height: 1.1; letter-spacing: -.5px; }
+  h1 em { font-style: normal; color: var(--purple); }
+  h2 { font-size: 22px; font-weight: 900; line-height: 1.15; }
+  h3 { font-size: 12px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  p { font-size: 16px; line-height: 1.5; }
+  .lead { margin-top: 14px; color: #3b3045; }
+
+  .howto { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
+  .howto div { border-radius: 16px; padding: 14px; font-weight: 700; font-size: 15px; line-height: 1.3; }
+  .howto .l { background: #efe7f7; color: var(--purple); }
+  .howto .r { background: #e6f7cf; color: #2c4a07; }
+  .howto b { display: block; font-size: 22px; margin-bottom: 4px; }
+
+  .btn {
+    font-family: inherit; font-size: 17px; font-weight: 900;
+    border: none; border-radius: 14px; padding: 16px 20px; cursor: pointer;
+    background: var(--lime); color: var(--black); width: 100%;
+  }
+  .btn:focus-visible, .choice:focus-visible, .undo:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+  .btn.dark { background: var(--black); color: #fff; }
+  .spacer { flex: 1; min-height: 24px; }
+
+  /* Hra */
+  .deck { position: relative; flex: 1; min-height: 300px; margin: 4px 0 18px; }
+  .card {
+    position: absolute; inset: 0;
+    background: var(--card); border-radius: 28px;
+    box-shadow: 0 10px 30px rgba(103,19,159,.14), 0 1px 0 rgba(103,19,159,.06);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 28px 24px; text-align: center;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    cursor: grab; will-change: transform;
+  }
+  .card.next { transform: scale(.94) translateY(14px); opacity: .7; cursor: default; }
+  .card.dragging { cursor: grabbing; }
+  .card .ikona { font-size: 84px; line-height: 1; }
+  .card .nazev { font-size: 24px; font-weight: 800; margin-top: 18px; line-height: 1.2; }
+  .card .cena { font-size: 30px; font-weight: 900; color: var(--purple); margin-top: 10px; }
+  .card .pozn { font-size: 14px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+  .card .pribeh {
+    margin-top: 20px; background: #f3edf9; border-radius: 16px; padding: 14px 16px;
+    font-size: 17px; line-height: 1.4; font-weight: 600; color: #2d2238;
+  }
+  .stamp {
+    position: absolute; top: 22px; padding: 6px 14px; border-radius: 10px;
+    font-size: 22px; font-weight: 900; letter-spacing: 1px; opacity: 0; pointer-events: none;
+    border: 3px solid;
+  }
+  .stamp.navic { right: 20px; color: var(--purple); border-color: var(--purple); transform: rotate(10deg); }
+  .stamp.nutne { left: 20px; color: #3d6a06; border-color: #6fae14; transform: rotate(-10deg); }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex-shrink: 0; }
+  .choice {
+    font-family: inherit; border: none; border-radius: 16px; padding: 16px 10px;
+    font-size: 17px; font-weight: 900; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .choice.navic { background: #efe7f7; color: var(--purple); }
+  .choice.nutne { background: var(--lime); color: var(--black); }
+  .undo {
+    font-family: inherit; background: none; border: none; color: var(--muted);
+    font-size: 14px; font-weight: 700; margin: 12px auto 0; padding: 6px 10px; cursor: pointer;
+  }
+  .undo[disabled] { visibility: hidden; }
+
+  /* Mezihra */
+  .big-emoji { font-size: 64px; margin-bottom: 14px; }
+
+  /* Výsledky */
+  .box { background: #fff; border-radius: 20px; padding: 18px; margin-top: 16px; box-shadow: 0 4px 16px rgba(103,19,159,.08); }
+  .split { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin: 12px 0 10px; background: #efe7f7; }
+  .split .n { background: var(--lime); }
+  .split .v { background: var(--not); }
+  .legend { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; }
+  .legend b { font-size: 20px; font-weight: 900; display: block; }
+  .legend .v b { color: var(--purple); }
+  .legend .v { text-align: right; }
+  .zmena { padding: 12px 0; border-top: 1px solid rgba(103,19,159,.1); }
+  .zmena:first-of-type { border-top: none; padding-top: 0; }
+  .zmena .co { font-weight: 800; font-size: 16px; }
+  .zmena .pr { font-size: 14px; color: #4a3d57; margin: 4px 0 8px; line-height: 1.4; }
+  .pill { display: inline-block; font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
+  .pill.nutne { background: #e6f7cf; color: #2c4a07; }
+  .pill.navic { background: #efe7f7; color: var(--purple); }
+  .arrow { color: var(--muted); margin: 0 6px; font-weight: 800; }
+  .key { background: var(--black); color: #fff; }
+  .key p { color: rgba(255,255,255,.85); }
+  .key strong { color: var(--lime); }
+  .muted { color: var(--muted); font-size: 15px; }
+  .actions { margin-top: 20px; display: grid; gap: 10px; }
+
+  @media (max-height: 700px) {
+    .screen { padding: 16px 16px; }
+    .deck { min-height: 260px; margin-bottom: 12px; }
+    .card { padding: 20px 18px; }
+    .card .ikona { font-size: 60px; }
+    .card .nazev { font-size: 20px; margin-top: 12px; }
+    .card .cena { font-size: 24px; margin-top: 6px; }
+    .card .pribeh { margin-top: 14px; font-size: 15px; padding: 10px 12px; }
+    .choice { padding: 14px 10px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar > div { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand"><span class="symbol">ø</span><span>Nekrachni</span></div>
+    <div class="head-row">
+      <span class="round-label" id="roundLabel">Nutné, nebo navíc?</span>
+      <span class="progress-text" id="progressText"></span>
+    </div>
+    <div class="bar" aria-hidden="true"><div id="bar"></div></div>
+  </header>
+
+  <main>
+    <!-- Úvod -->
+    <section class="screen active" id="s-intro">
+      <h1>Nutné, <em>nebo</em> navíc?</h1>
+      <p class="lead">Ukážeme ti pár věcí, za které můžeš utratit peníze. U každé se rozhodni, jestli je podle tebe <strong>nutná</strong>, nebo <strong>navíc</strong>. Správná odpověď neexistuje, jde o tvůj názor.</p>
+      <div class="howto">
+        <div class="l"><b>←</b>Navíc<br><span style="font-weight:600">bez toho to jde</span></div>
+        <div class="r"><b>→</b>Nutné<br><span style="font-weight:600">bez toho to nejde</span></div>
+      </div>
+      <p class="muted" style="margin-top:14px">Kartu odtáhni prstem, nebo použij tlačítka dole. Hra má dvě krátká kola.</p>
+      <div class="spacer"></div>
+      <button class="btn" id="startBtn">Začít</button>
+    </section>
+
+    <!-- Hra -->
+    <section class="screen" id="s-game">
+      <div class="deck" id="deck"></div>
+      <div class="choices">
+        <button class="choice navic" id="btnNavic" aria-label="Navíc">← Navíc</button>
+        <button class="choice nutne" id="btnNutne" aria-label="Nutné">Nutné →</button>
+      </div>
+      <button class="undo" id="undoBtn" disabled>↶ Vrátit poslední kartu</button>
+    </section>
+
+    <!-- Mezi koly -->
+    <section class="screen" id="s-between">
+      <div class="big-emoji">📖</div>
+      <h2>Kolo 2: teď s příběhem</h2>
+      <p class="lead">Některé věci uvidíš znovu. Tentokrát ale budeš vědět, v jaké situaci je kupuješ. Rozhodni se znovu – klidně jinak než předtím.</p>
+      <div class="spacer"></div>
+      <button class="btn" id="round2Btn">Pokračovat</button>
+    </section>
+
+    <!-- Výsledky -->
+    <section class="screen scroll" id="s-results">
+      <h2>Hotovo! 🎉</h2>
+
+      <div class="box">
+        <h3>Kolo 1: bez příběhu</h3>
+        <div class="split" aria-hidden="true"><div class="n" id="splitN"></div><div class="v" id="splitV"></div></div>
+        <div class="legend">
+          <div class="n">Nutné<b id="sumN"></b><span class="muted" id="cntN"></span></div>
+          <div class="v">Navíc<b id="sumV"></b><span class="muted" id="cntV"></span></div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h3>Kolo 2: kde rozhodl příběh</h3>
+        <div id="zmeny"></div>
+      </div>
+
+      <div class="box key">
+        <p><strong>Jestli je věc nutná, často nezáleží na věci samotné, ale na situaci.</strong></p>
+        <p style="margin-top:10px">Před nákupem se vyplatí zeptat: Potřebuju to <em>teď</em>, nebo to jen <em>chci</em>?</p>
+      </div>
+
+      <div class="box">
+        <h3>Porovnej se sousedem</h3>
+        <p>Kam jste dali <strong>tenisky</strong>, <strong>Spotify</strong> a <strong>mobilní data</strong>? Máte to stejně? Proč ano, proč ne?</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn dark" id="againBtn">Hrát znovu</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="karty.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var kc = new Intl.NumberFormat('cs-CZ');
+  function formatKc(n) { return kc.format(n) + ' Kč'; }
+  function popis(volba) { return volba === 'nutne' ? 'Nutné' : 'Navíc'; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var vec = {};
+  window.KOLO_1.forEach(function (k) { vec[k.id] = k; });
+
+  var kola = [
+    window.KOLO_1.map(function (k) { return { id: k.id }; }),
+    window.KOLO_2.filter(function (k) { return vec[k.id]; })
+                 .map(function (k) { return { id: k.id, pribeh: k.pribeh }; })
+  ];
+
+  var stav;
+  function novyStav() { return { kolo: 0, index: 0, volby: [[], []] }; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var deck = $('deck');
+
+  function ukaz(screen) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+    $(screen).classList.add('active');
+  }
+
+  function aktualizujHlavicku() {
+    var karty = kola[stav.kolo];
+    $('roundLabel').textContent = 'Kolo ' + (stav.kolo + 1) + (stav.kolo === 0 ? ': bez příběhu' : ': s příběhem');
+    $('progressText').textContent = Math.min(stav.index + 1, karty.length) + ' / ' + karty.length;
+    $('bar').style.width = (stav.index / karty.length * 100) + '%';
+    $('undoBtn').disabled = stav.index === 0;
+  }
+
+  function vytvorKartu(k, dalsi) {
+    var v = vec[k.id];
+    var el = document.createElement('div');
+    el.className = 'card' + (dalsi ? ' next' : '');
+    el.innerHTML =
+      '<span class="stamp nutne">NUTNÉ</span><span class="stamp navic">NAVÍC</span>' +
+      '<div class="ikona" aria-hidden="true">' + v.ikona + '</div>' +
+      '<div class="nazev">' + esc(v.nazev) + '</div>' +
+      '<div class="cena">' + formatKc(v.cena) + '</div>' +
+      (v.pozn ? '<div class="pozn">' + esc(v.pozn) + '</div>' : '') +
+      (k.pribeh ? '<div class="pribeh">' + esc(k.pribeh) + '</div>' : '');
+    if (dalsi) el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+
+  var horni = null;
+  var animuje = false;
+
+  function vykresli() {
+    deck.innerHTML = '';
+    var karty = kola[stav.kolo];
+    if (stav.index + 1 < karty.length) deck.appendChild(vytvorKartu(karty[stav.index + 1], true));
+    horni = vytvorKartu(karty[stav.index], false);
+    deck.appendChild(horni);
+    pripojTahani(horni);
+    aktualizujHlavicku();
+  }
+
+  function rozhodni(volba) {
+    if (animuje || !horni) return;
+    animuje = true;
+    var karta = horni;
+    var smer = volba === 'nutne' ? 1 : -1;
+    var sirka = deck.offsetWidth || 360;
+    var tahova = karta.querySelector('.stamp.' + volba);
+    if (tahova) tahova.style.opacity = 1;
+    karta.style.transition = 'transform .28s ease-in, opacity .28s ease-in';
+    karta.style.transform = 'translateX(' + (smer * sirka * 1.4) + 'px) rotate(' + (smer * 22) + 'deg)';
+    karta.style.opacity = '0';
+
+    var karty = kola[stav.kolo];
+    stav.volby[stav.kolo][stav.index] = { id: karty[stav.index].id, pribeh: karty[stav.index].pribeh, volba: volba };
+
+    setTimeout(function () {
+      animuje = false;
+      stav.index++;
+      if (stav.index < karty.length) { vykresli(); return; }
+      if (stav.kolo === 0 && kola[1].length) {
+        $('bar').style.width = '100%';
+        ukaz('s-between');
+        $('round2Btn').focus();
+      } else {
+        zobrazVysledky();
+      }
+    }, 260);
+  }
+
+  function vratit() {
+    if (animuje || stav.index === 0) return;
+    stav.index--;
+    stav.volby[stav.kolo].length = stav.index;
+    vykresli();
+  }
+
+  function pripojTahani(el) {
+    var startX = 0, startY = 0, dx = 0, aktivni = false, cas = 0, pointerId = null;
+    var stampN = el.querySelector('.stamp.nutne');
+    var stampV = el.querySelector('.stamp.navic');
+
+    el.addEventListener('pointerdown', function (e) {
+      if (animuje) return;
+      aktivni = true; pointerId = e.pointerId;
+      startX = e.clientX; startY = e.clientY; dx = 0; cas = Date.now();
+      el.setPointerCapture(pointerId);
+      el.style.transition = 'none';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('pointermove', function (e) {
+      if (!aktivni || e.pointerId !== pointerId) return;
+      dx = e.clientX - startX;
+      var dy = (e.clientY - startY) * 0.25;
+      el.style.transform = 'translateX(' + dx + 'px) translateY(' + dy + 'px) rotate(' + (dx / 18) + 'deg)';
+      var sila = Math.min(Math.abs(dx) / 90, 1);
+      stampN.style.opacity = dx > 0 ? sila : 0;
+      stampV.style.opacity = dx < 0 ? sila : 0;
+    });
+    function konec(e) {
+      if (!aktivni || e.pointerId !== pointerId) return;
+      aktivni = false;
+      el.classList.remove('dragging');
+      var rychlost = Math.abs(dx) / Math.max(Date.now() - cas, 1);
+      if (Math.abs(dx) > 90 || (Math.abs(dx) > 30 && rychlost > 0.6)) {
+        rozhodni(dx > 0 ? 'nutne' : 'navic');
+      } else {
+        el.style.transition = 'transform .2s ease-out';
+        el.style.transform = '';
+        stampN.style.opacity = 0; stampV.style.opacity = 0;
+      }
+    }
+    el.addEventListener('pointerup', konec);
+    el.addEventListener('pointercancel', konec);
+  }
+
+  function zobrazVysledky() {
+    var r1 = stav.volby[0];
+    var sumN = 0, sumV = 0, cntN = 0, cntV = 0, puvodni = {};
+    r1.forEach(function (z) {
+      puvodni[z.id] = z.volba;
+      if (z.volba === 'nutne') { sumN += vec[z.id].cena; cntN++; } else { sumV += vec[z.id].cena; cntV++; }
+    });
+    var celkem = sumN + sumV || 1;
+    $('splitN').style.width = (sumN / celkem * 100) + '%';
+    $('splitV').style.width = (sumV / celkem * 100) + '%';
+    $('sumN').textContent = formatKc(sumN);
+    $('sumV').textContent = formatKc(sumV);
+    $('cntN').textContent = sklonujVec(cntN);
+    $('cntV').textContent = sklonujVec(cntV);
+
+    var zmeny = stav.volby[1].filter(function (z) { return puvodni[z.id] && puvodni[z.id] !== z.volba; });
+    var html;
+    if (zmeny.length) {
+      html = '<p class="muted" style="margin-bottom:12px">U těchto věcí ti příběh změnil odpověď:</p>' +
+        zmeny.map(function (z) {
+          var v = vec[z.id];
+          return '<div class="zmena"><div class="co">' + v.ikona + ' ' + esc(v.nazev) + '</div>' +
+            '<div class="pr">„' + esc(z.pribeh) + '“</div>' +
+            '<span class="pill ' + puvodni[z.id] + '">' + popis(puvodni[z.id]) + '</span>' +
+            '<span class="arrow">→</span>' +
+            '<span class="pill ' + z.volba + '">' + popis(z.volba) + '</span></div>';
+        }).join('');
+    } else {
+      html = '<p>Příběh ti odpověď nezměnil ani jednou. Máš jasno! Zkus to probrat se sousedem – vidí to stejně?</p>';
+    }
+    $('zmeny').innerHTML = html;
+
+    $('roundLabel').textContent = 'Výsledky';
+    $('progressText').textContent = '';
+    $('bar').style.width = '100%';
+    ukaz('s-results');
+    $('s-results').scrollTop = 0;
+  }
+
+  function sklonujVec(n) {
+    if (n === 1) return '1 věc';
+    if (n >= 2 && n <= 4) return n + ' věci';
+    return n + ' věcí';
+  }
+
+  function start() {
+    stav = novyStav();
+    ukaz('s-game');
+    vykresli();
+  }
+
+  $('startBtn').addEventListener('click', start);
+  $('againBtn').addEventListener('click', start);
+  $('round2Btn').addEventListener('click', function () {
+    stav.kolo = 1; stav.index = 0;
+    ukaz('s-game');
+    vykresli();
+  });
+  $('btnNutne').addEventListener('click', function () { rozhodni('nutne'); });
+  $('btnNavic').addEventListener('click', function () { rozhodni('navic'); });
+  $('undoBtn').addEventListener('click', vratit);
+
+  document.addEventListener('keydown', function (e) {
+    if (!$('s-game').classList.contains('active')) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); rozhodni('nutne'); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); rozhodni('navic'); }
+    else if ((e.key === 'Backspace' || (e.key === 'z' && (e.ctrlKey || e.metaKey)))) { e.preventDefault(); vratit(); }
+  });
+})();
+</script>
+</body>
+</html>
