@@ -8,7 +8,9 @@ window.SAZBA = {
   krok: 5,
   // Poznámka pod posuvníkem. Zdroj: nařízení vlády o minimální mzdě pro rok 2026
   // (22 400 Kč měsíčně, 134,40 Kč za hodinu). Ověř si před workshopem.
-  poznamka: 'Minimální mzda je v roce 2026 134,40 Kč za hodinu. Brigádu můžeš mít od 15 let, až po skončení povinné školní docházky.',
+  // Brigáda od 14 let (před koncem povinné školní docházky): jen o hlavních letních
+  // prázdninách, jen lehké práce a s písemným souhlasem rodičů.
+  poznamka: 'Minimální mzda je v roce 2026 134,40 Kč za hodinu. Od 14 let můžeš o letních prázdninách dělat lehkou brigádu, ale potřebuješ písemný souhlas rodičů.',
 };
 
 // Délka jedné brigády v hodinách (pro větu „to je N odpolední brigády“)
