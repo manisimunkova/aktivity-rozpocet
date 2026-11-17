@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moje výdaje za měsíc – Nekrachni</title>
+<meta name="description" content="Zmapuj si, za co jsi za poslední měsíc utratil/a peníze.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../spolecne.css">
+<style>
+  .kat { margin-top: 22px; }
+  .kat h3 { font-size: 13px; }
+  .rad { background: #fff; border-radius: 16px; padding: 12px 14px; margin-top: 8px; box-shadow: 0 2px 10px rgba(103,19,159,.07); }
+  .rad.aktivni { box-shadow: 0 0 0 2px var(--purple), 0 2px 10px rgba(103,19,159,.07); }
+  .r1 { display: flex; align-items: flex-start; gap: 10px; }
+  .r1 .ik { font-size: 22px; line-height: 1.2; }
+  .r1 .nz { flex: 1; font-weight: 700; font-size: 15px; line-height: 1.3; }
+  .r1 .sub { font-weight: 900; color: var(--purple); white-space: nowrap; font-size: 15px; }
+  .r2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+  .cena { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .cena input {
+    font-family: inherit; font-size: 15px; font-weight: 700; width: 72px; padding: 7px 8px; text-align: right;
+    border: 2px solid #e4d9ef; border-radius: 10px; background: #fff; color: inherit;
+  }
+  .cena input:focus, .jine input:focus, .prijem input:focus { border-color: var(--purple); outline: none; }
+  .stepper { display: flex; align-items: center; gap: 4px; }
+  .stepper button {
+    font-family: inherit; width: 38px; height: 38px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 20px; font-weight: 900; background: var(--soft); color: var(--purple);
+  }
+  .stepper button.plus { background: var(--lime); color: var(--black); }
+  .stepper output { min-width: 42px; text-align: center; font-weight: 900; font-size: 17px; }
+  .stepper output small { font-size: 12px; color: var(--muted); font-weight: 700; }
+
+  .jine { display: grid; grid-template-columns: 1fr 100px; gap: 8px; margin-top: 10px; }
+  .jine input {
+    font-family: inherit; font-size: 16px; font-weight: 600; border: 2px solid #e4d9ef; border-radius: 12px;
+    padding: 11px 12px; background: #fff; min-width: 0; color: inherit;
+  }
+  .jine .btn { grid-column: 1 / -1; padding: 12px; font-size: 15px; }
+  .smazat { font-family: inherit; background: none; border: none; color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; padding: 4px 0; }
+
+  .paticka { flex-shrink: 0; background: var(--black); color: #fff; padding: 12px 20px 16px; display: flex; align-items: center; gap: 14px; }
+  .paticka .t { flex: 1; }
+  .paticka .t1 { font-size: 12px; color: rgba(255,255,255,.6); font-weight: 700; }
+  .paticka .t2 { font-size: 22px; font-weight: 900; color: var(--lime); }
+  .paticka .btn { width: auto; padding: 13px 18px; font-size: 15px; }
+
+  .total { font-size: 38px; font-weight: 900; color: var(--purple); line-height: 1.1; margin-top: 2px; }
+  .prijem { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .prijem label { font-size: 14px; font-weight: 700; flex-basis: 100%; }
+  .prijem input {
+    font-family: inherit; font-size: 16px; font-weight: 700; width: 120px; padding: 10px 12px;
+    border: 2px solid #e4d9ef; border-radius: 12px; color: inherit;
+  }
+  .bilance { margin-top: 10px; font-weight: 700; font-size: 15px; }
+
+  .bars { display: grid; gap: 12px; }
+  .bar-row .bl { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 700; }
+  .bar-row .bl span:last-child { white-space: nowrap; }
+  .bar-row .bl small { color: var(--muted); font-weight: 600; }
+  .bar-track { height: 12px; margin-top: 5px; }
+  .bar-fill { height: 100%; background: var(--purple); border-radius: 0 4px 4px 0; min-width: 3px; }
+  .top3 li { list-style: none; display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(103,19,159,.08); font-size: 15px; }
+  .top3 li:first-child { border-top: none; }
+  .top3 b { white-space: nowrap; }
+  .otazky li { margin: 6px 0 0 18px; font-size: 15px; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><a href="../"><span class="symbol">ø</span> Nekrachni</a></div>
+    <div class="head-row"><span class="label" id="label">Moje výdaje za měsíc</span></div>
+  </header>
+
+  <main>
+    <section class="screen active" id="s-zapis">
+      <h2>Za co jsi utratil/a <em>minulý měsíc</em>?</h2>
+      <p class="lead">U každé věci odhadni, <strong>kolikrát</strong> sis ji za poslední měsíc koupil/a. Když jsi platil/a jinou cenu, přepiš ji. Stačí přibližně.</p>
+      <div id="kategorie"></div>
+
+      <div class="kat">
+        <h3>➕ Něco jiného</h3>
+        <div id="vlastni"></div>
+        <form class="jine" id="jineForm" autocomplete="off">
+          <input id="jineNazev" placeholder="Za co?" maxlength="40" aria-label="Za co">
+          <input id="jineCena" type="number" inputmode="numeric" min="1" max="99999" placeholder="Kč celkem" aria-label="Kolik korun celkem">
+          <button class="btn soft" type="submit">+ Přidat</button>
+        </form>
+      </div>
+      <div style="height:12px"></div>
+    </section>
+
+    <section class="screen" id="s-mapa">
+      <h2>Tvoje výdaje za měsíc</h2>
+      <div class="box">
+        <h3>Celkem jsi utratil/a zhruba</h3>
+        <div class="total" id="total"></div>
+        <div class="prijem">
+          <label for="prijem">Kolik peněz jsi za ten měsíc dostal/a nebo vydělal/a? (nepovinné)</label>
+          <input id="prijem" type="number" inputmode="numeric" min="0" max="999999" placeholder="Kč">
+        </div>
+        <p class="bilance" id="bilance" aria-live="polite"></p>
+      </div>
+
+      <div class="box">
+        <h3>Podle kategorií</h3>
+        <div class="bars" id="bars"></div>
+      </div>
+
+      <div class="box">
+        <h3>Nejvíc peněz šlo za</h3>
+        <ul class="top3" id="top3"></ul>
+      </div>
+
+      <div class="box key">
+        <p><strong>Zamysli se:</strong></p>
+        <ul class="otazky">
+          <li>Překvapilo tě, kolik to dohromady dělá?</li>
+          <li>Která útrata ti udělala největší radost?</li>
+          <li>Bez které by ses příště klidně obešel/obešla?</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button class="btn soft" id="zpetBtn">← Upravit čísla</button>
+        <button class="btn dark" id="znovuBtn">Začít znovu</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="paticka" id="paticka">
+    <div class="t"><div class="t1">Zatím za měsíc</div><div class="t2" id="prubezne">0 Kč</div></div>
+    <button class="btn" id="hotovoBtn">Hotovo →</button>
+  </div>
+</div>
+
+<script src="polozky.js"></script>
+<script>
+(function () {
+  'use strict';
+  var kc = new Intl.NumberFormat('cs-CZ');
+  function formatKc(n) { return kc.format(Math.round(n)) + ' Kč'; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  var MAX_POCET = 99;
+
+  var kat, vlastni;
+  function reset() {
+    kat = window.KATEGORIE_VYDAJU.map(function (k) {
+      return { nazev: k.nazev, ikona: k.ikona, polozky: k.polozky.map(function (p) {
+        return { ikona: p.ikona, nazev: p.nazev, cena: p.cena, jednotka: p.jednotka || 'za kus', pocet: 0 };
+      }) };
+    });
+    vlastni = [];
+    $('prijem').value = '';
+  }
+
+  function sumaPolozky(p) { return p.pocet * (p.cena || 0); }
+  function sumaKat(k) { return k.polozky.reduce(function (a, p) { return a + sumaPolozky(p); }, 0); }
+  function sumaVlastni() { return vlastni.reduce(function (a, v) { return a + v.castka; }, 0); }
+  function celkem() { return kat.reduce(function (a, k) { return a + sumaKat(k); }, 0) + sumaVlastni(); }
+
+  function vykresli() {
+    $('kategorie').innerHTML = kat.map(function (k, ki) {
+      return '<div class="kat"><h3>' + k.ikona + ' ' + esc(k.nazev) + '</h3>' +
+        k.polozky.map(function (p, pi) {
+          var id = ki + '-' + pi;
+          return '<div class="rad' + (p.pocet ? ' aktivni' : '') + '" id="rad-' + id + '">' +
+            '<div class="r1"><span class="ik" aria-hidden="true">' + p.ikona + '</span>' +
+            '<span class="nz">' + esc(p.nazev) + '</span>' +
+            '<span class="sub" id="sub-' + id + '">' + (p.pocet ? formatKc(sumaPolozky(p)) : '') + '</span></div>' +
+            '<div class="r2"><label class="cena">' +
+            '<input type="number" inputmode="numeric" min="0" max="99999" value="' + p.cena + '" data-cena="' + id + '" aria-label="Cena: ' + esc(p.nazev) + '"> Kč ' + esc(p.jednotka) + '</label>' +
+            '<div class="stepper">' +
+            '<button type="button" data-krok="' + id + '" data-d="-1" aria-label="Méně: ' + esc(p.nazev) + '">−</button>' +
+            '<output id="poc-' + id + '">' + p.pocet + '<small>×</small></output>' +
+            '<button type="button" class="plus" data-krok="' + id + '" data-d="1" aria-label="Více: ' + esc(p.nazev) + '">+</button>' +
+            '</div></div></div>';
+        }).join('') + '</div>';
+    }).join('');
+    vykresliVlastni();
+    prubezne();
+  }
+
+  function vykresliVlastni() {
+    $('vlastni').innerHTML = vlastni.map(function (v, i) {
+      return '<div class="rad aktivni"><div class="r1"><span class="ik">⭐</span><span class="nz">' + esc(v.nazev) +
+        '<br><button type="button" class="smazat" data-smazat="' + i + '">Odebrat</button></span>' +
+        '<span class="sub">' + formatKc(v.castka) + '</span></div></div>';
+    }).join('');
+  }
+
+  function najdi(id) { var x = id.split('-'); return kat[Number(x[0])].polozky[Number(x[1])]; }
+
+  function aktualizujRadek(id) {
+    var p = najdi(id);
+    $('poc-' + id).innerHTML = p.pocet + '<small>×</small>';
+    $('sub-' + id).textContent = p.pocet ? formatKc(sumaPolozky(p)) : '';
+    $('rad-' + id).classList.toggle('aktivni', p.pocet > 0);
+    prubezne();
+  }
+
+  function prubezne() { $('prubezne').textContent = formatKc(celkem()); }
+
+  $('kategorie').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-krok]'); if (!b) return;
+    var p = najdi(b.dataset.krok);
+    p.pocet = Math.max(0, Math.min(MAX_POCET, p.pocet + Number(b.dataset.d)));
+    aktualizujRadek(b.dataset.krok);
+  });
+  $('kategorie').addEventListener('input', function (e) {
+    var id = e.target.dataset.cena; if (!id) return;
+    var v = Number(e.target.value);
+    najdi(id).cena = v > 0 ? Math.round(v) : 0;
+    aktualizujRadek(id);
+  });
+  $('jineForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var n = $('jineNazev').value.trim(), c = Math.round(Number($('jineCena').value));
+    if (!n) { $('jineNazev').focus(); return; }
+    if (!(c > 0)) { $('jineCena').focus(); return; }
+    vlastni.push({ nazev: n, castka: c });
+    $('jineNazev').value = ''; $('jineCena').value = '';
+    vykresliVlastni(); prubezne();
+  });
+  $('vlastni').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-smazat]'); if (!b) return;
+    vlastni.splice(Number(b.dataset.smazat), 1);
+    vykresliVlastni(); prubezne();
+  });
+
+  function ukaz(id) {
+    document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+    $(id).classList.add('active');
+    $(id).scrollTop = 0;
+    $('paticka').style.display = id === 's-zapis' ? '' : 'none';
+    $('label').textContent = id === 's-zapis' ? 'Moje výdaje za měsíc' : 'Mapa výdajů';
+  }
+
+  function bilance() {
+    var p = Number($('prijem').value), c = celkem();
+    if (!$('prijem').value || !(p >= 0)) { $('bilance').textContent = ''; return; }
+    var r = p - c;
+    $('bilance').textContent = r > 0 ? 'Zbylo ti zhruba ' + formatKc(r) + '. Kam se tyhle peníze poděly?'
+      : r === 0 ? 'Utratil/a jsi přesně tolik, kolik jsi měl/a.'
+      : 'Utratil/a jsi o ' + formatKc(-r) + ' víc, než jsi měl/a. Odkud se ty peníze vzaly?';
+  }
+
+  function mapa() {
+    var c = celkem();
+    $('total').textContent = formatKc(c);
+    bilance();
+    var radky = kat.map(function (k) { return { nazev: k.ikona + ' ' + k.nazev, suma: sumaKat(k) }; });
+    if (vlastni.length) radky.push({ nazev: '⭐ Něco jiného', suma: sumaVlastni() });
+    radky = radky.filter(function (r) { return r.suma > 0; }).sort(function (a, b) { return b.suma - a.suma; });
+    var max = radky.length ? radky[0].suma : 1;
+    $('bars').innerHTML = radky.length ? radky.map(function (r) {
+      var pct = Math.round(r.suma / c * 100);
+      return '<div class="bar-row"><div class="bl"><span>' + esc(r.nazev) + '</span><span>' + formatKc(r.suma) +
+        ' <small>(' + pct + ' %)</small></span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + (r.suma / max * 100) + '%"></div></div></div>';
+    }).join('') : '<p class="muted">Zatím nemáš zapsané žádné výdaje. Vrať se a doplň čísla.</p>';
+
+    var vse = [];
+    kat.forEach(function (k) { k.polozky.forEach(function (p) {
+      if (p.pocet) vse.push({ nazev: p.ikona + ' ' + p.nazev + (p.pocet > 1 ? ' (' + p.pocet + '×)' : ''), suma: sumaPolozky(p) });
+    }); });
+    vlastni.forEach(function (v) { vse.push({ nazev: '⭐ ' + v.nazev, suma: v.castka }); });
+    vse.sort(function (a, b) { return b.suma - a.suma; });
+    $('top3').innerHTML = vse.slice(0, 3).map(function (v) {
+      return '<li><span>' + esc(v.nazev) + '</span><b>' + formatKc(v.suma) + '</b></li>';
+    }).join('') || '<li class="muted">Nic zapsaného.</li>';
+    ukaz('s-mapa');
+  }
+
+  $('hotovoBtn').addEventListener('click', mapa);
+  $('prijem').addEventListener('input', bilance);
+  $('zpetBtn').addEventListener('click', function () { ukaz('s-zapis'); });
+  $('znovuBtn').addEventListener('click', function () { reset(); vykresli(); ukaz('s-zapis'); });
+
+  reset();
+  vykresli();
+})();
+</script>
+</body>
+</html>

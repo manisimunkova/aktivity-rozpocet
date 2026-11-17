@@ -8,13 +8,15 @@ vidí jen ono na svém displeji a nikam se to neposílá.
 |---|---|---|---|
 | Nutné, nebo navíc? (swipe hra) | `swipe/` | 7–10 min | Výdaje |
 | FOMO feed | `fomo/` | 8–15 min | Výdaje, FOMO |
+| Moje výdaje za měsíc | `vydaje/` | 10 min | Jak na budget (mapování výdajů) |
 | Měsíc s kapesným | `kapesne/` | 10–20 min | Jak na budget |
 | Kolik hodin brigády to stojí? | `hodiny/` | 5–10 min | Finanční cíle |
 
 Web: https://manisimunkova.github.io/aktivity-rozpocet/
 
 Texty, ceny a události každé aktivity jsou v jednom souboru `.js` v její složce
-(`swipe/karty.js`, `fomo/prispevky.js`, `kapesne/udalosti.js`, `hodiny/veci.js`).
+(`swipe/karty.js`, `fomo/prispevky.js`, `vydaje/polozky.js`, `kapesne/udalosti.js`,
+`hodiny/veci.js`).
 Na začátku každého souboru je návod, co které pole znamená.
 
 ## Nutné, nebo navíc?
@@ -41,6 +43,16 @@ Ve výsledku: kolik by utratilo (i v poměru ke kapesnému), které triky zabral
 které ne. Pointa: pravidlo 24 hodin.
 
 **Do diskuse:** Který trik je nejzáludnější? Kde jste ho viděli doopravdy?
+
+## Moje výdaje za měsíc
+
+Ke slajdu „Zmapuj si svoje výdaje (přibližně) za poslední měsíc“. 21 typických útrat v 8
+kategoriích (jídlo a pití, hry a předplatné, zábava, oblečení, doprava, telefon, dárky,
+škola a koníčky). U každé dítě tlačítky +/− zadá, kolikrát si ji koupilo, a může přepsat
+předvyplněnou cenu. Vlastní útratu přidá jako „Něco jiného“ s částkou celkem. Dole běží
+průběžný součet. Mapa výdajů ukáže celkovou částku, kategorie seřazené od největší
+(sloupce a podíl v %), tři největší útraty a otázky k zamyšlení. Když dítě vyplní, kolik
+peněz za měsíc mělo, ukáže se, kolik zbylo nebo o kolik utratilo víc.
 
 ## Měsíc s kapesným
 
