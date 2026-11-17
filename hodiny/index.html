@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kolik hodin brigády to stojí? – Nekrachni</title>
+<meta name="description" content="Přepočítej si věci, které chceš, na hodiny práce na brigádě.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../spolecne.css">
+<style>
+  .sazba { background: #fff; border-radius: 20px; padding: 16px 18px; margin-top: 18px; box-shadow: 0 4px 16px rgba(103,19,159,.08); }
+  .sazba-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .sazba-row label { font-weight: 800; font-size: 15px; }
+  .sazba-row output { font-size: 24px; font-weight: 900; color: var(--purple); white-space: nowrap; }
+  input[type=range] { width: 100%; margin: 14px 0 8px; accent-color: var(--purple); height: 28px; }
+  .sazba .muted { font-size: 13px; line-height: 1.4; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .vec {
+    font-family: inherit; text-align: left; cursor: pointer;
+    background: #fff; border: 2px solid transparent; border-radius: 18px; padding: 12px;
+    box-shadow: 0 2px 10px rgba(103,19,159,.07); display: flex; flex-direction: column; gap: 2px;
+    position: relative; color: inherit;
+  }
+  .vec[aria-pressed=true] { border-color: var(--purple); background: #fbf8fe; }
+  .vec[aria-pressed=true]::after {
+    content: '✓'; position: absolute; top: 8px; right: 10px; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--purple); color: #fff; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  }
+  .vec .ik { font-size: 30px; line-height: 1.1; }
+  .vec .nz { font-weight: 800; font-size: 14px; line-height: 1.25; margin-top: 4px; }
+  .vec .cn { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .vec .hod { font-size: 17px; font-weight: 900; color: var(--purple); margin-top: 4px; }
+
+  .vlastni { display: grid; grid-template-columns: 1fr 110px; gap: 8px; margin-top: 10px; }
+  .vlastni input {
+    font-family: inherit; font-size: 16px; font-weight: 600; border: 2px solid #e4d9ef; border-radius: 12px;
+    padding: 12px; background: #fff; min-width: 0; color: inherit;
+  }
+  .vlastni input:focus { border-color: var(--purple); outline: none; }
+  .vlastni .btn { grid-column: 1 / -1; padding: 12px; font-size: 15px; }
+
+  .souhrn { flex-shrink: 0; background: var(--black); color: #fff; padding: 14px 20px 18px; }
+  .souhrn .s1 { font-size: 13px; color: rgba(255,255,255,.65); font-weight: 700; }
+  .souhrn .s2 { font-size: 24px; font-weight: 900; color: var(--lime); margin-top: 2px; }
+  .souhrn .s3 { font-size: 14px; color: rgba(255,255,255,.85); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><a href="../"><span class="symbol">ø</span> Nekrachni</a></div>
+    <div class="head-row"><span class="label">Kolik hodin brigády to stojí?</span></div>
+  </header>
+
+  <main>
+    <section class="screen active">
+      <h2>Kolik hodin bys musel/a <em>pracovat</em>?</h2>
+      <p class="lead">Vyber věci, které bys chtěl/a. Ukážeme ti, kolik hodin práce na brigádě za ně dáš.</p>
+
+      <div class="sazba">
+        <div class="sazba-row">
+          <label for="sazba">Kolik dostaneš za hodinu</label>
+          <output id="sazbaOut" for="sazba"></output>
+        </div>
+        <input type="range" id="sazba">
+        <p class="muted" id="sazbaPozn"></p>
+      </div>
+
+      <h3 style="margin-top:22px">Můj seznam přání</h3>
+      <div class="grid" id="grid"></div>
+
+      <form class="vlastni" id="vlastni" autocomplete="off">
+        <input id="vlNazev" placeholder="Něco jiného? Napiš co" maxlength="40" aria-label="Název věci">
+        <input id="vlCena" type="number" inputmode="numeric" min="1" max="999999" placeholder="Cena v Kč" aria-label="Cena v korunách">
+        <button class="btn soft" type="submit">+ Přidat do seznamu</button>
+      </form>
+
+      <div class="box key">
+        <p><strong>Než něco koupíš, zeptej se:</strong> Stálo by mi to za tolik hodin práce?</p>
+      </div>
+      <div style="height:8px"></div>
+    </section>
+  </main>
+
+  <div class="souhrn" aria-live="polite">
+    <div class="s1" id="s1"></div>
+    <div class="s2" id="s2"></div>
+    <div class="s3" id="s3"></div>
+  </div>
+</div>
+
+<script src="veci.js"></script>
+<script>
+(function () {
+  'use strict';
+  var kc = new Intl.NumberFormat('cs-CZ');
+  function formatKc(n) { return kc.format(n) + ' Kč'; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function formatCas(cena, sazba) {
+    var minut = Math.round(cena / sazba * 60);
+    var h = Math.floor(minut / 60), m = minut % 60;
+    if (h === 0) return m + ' min';
+    if (m === 0) return h + ' h';
+    return h + ' h ' + m + ' min';
+  }
+  function sklon(n, a, b, c) { return n === 1 ? a : (n >= 2 && n <= 4 ? b : c); }
+
+  var S = window.SAZBA;
+  var veci = window.VECI.map(function (v) { return { ikona: v.ikona, nazev: v.nazev, cena: v.cena, vybrano: false }; });
+  var $ = function (id) { return document.getElementById(id); };
+  var range = $('sazba');
+  range.min = S.min; range.max = S.max; range.step = S.krok; range.value = S.vychozi;
+  $('sazbaPozn').textContent = S.poznamka;
+
+  function sazba() { return Number(range.value); }
+
+  function vykresli() {
+    var s = sazba();
+    $('sazbaOut').textContent = formatKc(s);
+    $('grid').innerHTML = veci.map(function (v, i) {
+      return '<button type="button" class="vec" data-i="' + i + '" aria-pressed="' + v.vybrano + '">' +
+        '<span class="ik" aria-hidden="true">' + v.ikona + '</span>' +
+        '<span class="nz">' + esc(v.nazev) + '</span>' +
+        '<span class="cn">' + formatKc(v.cena) + '</span>' +
+        '<span class="hod">' + formatCas(v.cena, s) + '</span></button>';
+    }).join('');
+    souhrn();
+  }
+
+  function souhrn() {
+    var s = sazba();
+    var vybrane = veci.filter(function (v) { return v.vybrano; });
+    if (!vybrane.length) {
+      $('s1').textContent = 'Seznam přání je prázdný';
+      $('s2').textContent = 'Klepni na věc, kterou chceš';
+      $('s3').textContent = '';
+      return;
+    }
+    var cena = vybrane.reduce(function (a, v) { return a + v.cena; }, 0);
+    var hodin = cena / s;
+    var brigad = Math.ceil(hodin / window.HODIN_NA_BRIGADU);
+    $('s1').textContent = vybrane.length + ' ' + sklon(vybrane.length, 'věc', 'věci', 'věcí') + ' za ' + formatKc(cena);
+    $('s2').textContent = formatCas(cena, s) + ' práce';
+    $('s3').textContent = 'To je ' + brigad + ' ' + sklon(brigad, 'brigáda', 'brigády', 'brigád') +
+      ' po ' + window.HODIN_NA_BRIGADU + ' hodinách.';
+  }
+
+  range.addEventListener('input', vykresli);
+  $('grid').addEventListener('click', function (e) {
+    var b = e.target.closest('.vec');
+    if (!b) return;
+    var v = veci[Number(b.dataset.i)];
+    v.vybrano = !v.vybrano;
+    b.setAttribute('aria-pressed', v.vybrano);
+    souhrn();
+  });
+  $('vlastni').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var nazev = $('vlNazev').value.trim();
+    var cena = Math.round(Number($('vlCena').value));
+    if (!nazev) { $('vlNazev').focus(); return; }
+    if (!(cena > 0)) { $('vlCena').focus(); return; }
+    veci.push({ ikona: '⭐', nazev: nazev, cena: cena, vybrano: true });
+    $('vlNazev').value = ''; $('vlCena').value = '';
+    vykresli();
+  });
+
+  vykresli();
+})();
+</script>
+</body>
+</html>

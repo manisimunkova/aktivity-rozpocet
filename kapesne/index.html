@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Měsíc s kapesným – Nekrachni</title>
+<meta name="description" content="Vyjdeš s kapesným a ještě ušetříš na svůj cíl?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../spolecne.css">
+<style>
+  .penize { display: flex; gap: 14px; justify-content: flex-end; }
+  .penize span { white-space: nowrap; }
+  .volba {
+    font-family: inherit; text-align: left; cursor: pointer; width: 100%;
+    background: #fff; border: 2px solid transparent; border-radius: 18px; padding: 14px 16px;
+    box-shadow: 0 2px 10px rgba(103,19,159,.08); display: flex; align-items: center; gap: 12px;
+    font-size: 16px; font-weight: 700; color: inherit;
+  }
+  .volba:hover:not([disabled]) { border-color: var(--not); }
+  .volba[disabled] { opacity: .45; cursor: not-allowed; }
+  .volba .ik { font-size: 30px; }
+  .volba .t { flex: 1; line-height: 1.3; }
+  .volba .c { font-weight: 900; color: var(--purple); white-space: nowrap; }
+  .volba .pozn { display: block; font-size: 12px; font-weight: 700; color: var(--red); margin-top: 3px; }
+  .volby { display: grid; gap: 10px; margin-top: 18px; }
+  .castky { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 18px; }
+  .castky button {
+    font-family: inherit; font-size: 15px; font-weight: 900; padding: 14px 4px; border-radius: 14px; cursor: pointer;
+    border: 2px solid transparent; background: #fff; box-shadow: 0 2px 10px rgba(103,19,159,.08); color: inherit;
+  }
+  .castky button[aria-pressed=true] { border-color: var(--purple); background: var(--soft); color: var(--purple); }
+  .udalost { background: #fff; border-radius: 24px; padding: 22px 20px; box-shadow: 0 6px 22px rgba(103,19,159,.1); text-align: center; }
+  .udalost .ik { font-size: 64px; line-height: 1; }
+  .udalost p { font-size: 19px; font-weight: 700; line-height: 1.35; margin-top: 12px; }
+  .tyden { font-size: 13px; font-weight: 800; color: var(--purple); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .zprava { margin-top: 14px; background: #fff3f3; color: #7d1a1f; border-radius: 14px; padding: 12px 14px; font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .postup { height: 16px; background: var(--soft); border-radius: 8px; overflow: hidden; margin: 12px 0 8px; display: flex; }
+  .postup .a { background: var(--not); }
+  .postup .b { background: var(--lime); }
+  .radek { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid rgba(103,19,159,.08); font-size: 15px; }
+  .radek:first-child { border-top: none; }
+  .radek b { white-space: nowrap; }
+  .vysl-cil { font-size: 22px; font-weight: 900; margin-top: 4px; }
+  .vysl-cil.ok { color: var(--green-text); }
+  .vysl-cil.ne { color: var(--purple); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><a href="../"><span class="symbol">ø</span> Nekrachni</a></div>
+    <div class="head-row">
+      <span class="label" id="label">Měsíc s kapesným</span>
+      <span class="head-info penize" id="penize"></span>
+    </div>
+    <div class="bar" aria-hidden="true"><div id="bar"></div></div>
+  </header>
+
+  <main>
+    <!-- 1. Cíl -->
+    <section class="screen active" id="s-cil">
+      <h1>Měsíc s <em>kapesným</em></h1>
+      <p class="lead" id="uvodText"></p>
+      <h3 style="margin-top:22px">Na co spoříš?</h3>
+      <div class="volby" id="cile"></div>
+    </section>
+
+    <!-- 2. Odložit na začátku -->
+    <section class="screen" id="s-odlozit">
+      <div class="big-emoji">🐷</div>
+      <h2>Kolik si dáš do prasátka <em>hned</em>?</h2>
+      <p class="lead" id="odlozitText"></p>
+      <div class="castky" id="castky"></div>
+      <p class="muted" style="margin-top:12px">Zbytek ti zůstane v peněžence na celý měsíc.</p>
+      <div class="spacer"></div>
+      <button class="btn" id="odlozitBtn" disabled>Začít měsíc</button>
+    </section>
+
+    <!-- 3. Události -->
+    <section class="screen" id="s-udalost">
+      <div class="tyden" id="tyden"></div>
+      <div class="udalost">
+        <div class="ik" id="udIkona" aria-hidden="true"></div>
+        <p id="udText"></p>
+      </div>
+      <div class="volby" id="udVolby"></div>
+      <div class="zprava" id="udZprava" hidden></div>
+    </section>
+
+    <!-- 4. Konec měsíce -->
+    <section class="screen" id="s-zbytek">
+      <div class="big-emoji">📅</div>
+      <h2>Konec měsíce</h2>
+      <p class="lead" id="zbytekText"></p>
+      <div class="volby">
+        <button class="volba" id="zbytekPrasatko"><span class="ik">🐷</span><span class="t">Dát je do prasátka</span></button>
+        <button class="volba" id="zbytekNechat"><span class="ik">👛</span><span class="t">Nechat si je v peněžence</span></button>
+      </div>
+    </section>
+
+    <!-- 5. Výsledek -->
+    <section class="screen" id="s-vysledek">
+      <h2>Jak ti to šlo?</h2>
+      <div class="box">
+        <h3 id="cilNadpis"></h3>
+        <div class="postup" aria-hidden="true"><div class="a" id="postupA"></div><div class="b" id="postupB"></div></div>
+        <p class="muted" id="postupText"></p>
+        <div class="vysl-cil" id="cilVysledek"></div>
+      </div>
+
+      <div class="box">
+        <h3>Kam šly peníze</h3>
+        <div id="utraty"></div>
+      </div>
+
+      <div class="box key" id="ponaucení">
+        <p id="ponauceni"></p>
+      </div>
+
+      <div class="box">
+        <h3>Do diskuse</h3>
+        <p>Která situace byla nejtěžší? Co bys příště udělal/a jinak?</p>
+      </div>
+
+      <div class="actions">
+        <button class="btn dark" id="againBtn">Zkusit znovu</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="udalosti.js"></script>
+<script>
+(function () {
+  'use strict';
+  var kc = new Intl.NumberFormat('cs-CZ');
+  function formatKc(n) { return kc.format(n) + ' Kč'; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  var $ = function (id) { return document.getElementById(id); };
+  var U = window.UDALOSTI;
+
+  var s; // stav hry
+  function novyStav() {
+    return { cil: null, odlozeno: null, penezenka: 0, prasatko: 0, krok: 0, utraty: {}, zPrasatka: [] };
+  }
+
+  function ukaz(id) {
+    document.querySelectorAll('.screen').forEach(function (x) { x.classList.remove('active'); });
+    $(id).classList.add('active');
+    $(id).scrollTop = 0;
+  }
+
+  function hlavicka() {
+    if (s.cil === null || s.odlozeno === null) { $('penize').innerHTML = ''; return; }
+    $('penize').innerHTML = '<span>👛 <b>' + formatKc(s.penezenka) + '</b></span><span>🐷 <b>' + formatKc(s.prasatko) + '</b></span>';
+  }
+
+  // --- 1. cíl
+  function krokCil() {
+    s = novyStav();
+    $('uvodText').textContent = 'Dostal/a jsi kapesné ' + formatKc(window.KAPESNE) + ' na celý měsíc. Zároveň spoříš na něco, co moc chceš. Uvidíme, jestli to za měsíc stihneš.';
+    $('cile').innerHTML = window.CILE.map(function (c, i) {
+      return '<button class="volba" data-i="' + i + '"><span class="ik">' + c.ikona + '</span>' +
+        '<span class="t">' + esc(c.nazev) + '<span class="muted" style="display:block;font-weight:600;font-size:13px">' +
+        'Máš naspořeno ' + formatKc(c.nasporeno) + ', chybí ' + formatKc(c.cena - c.nasporeno) + '</span></span>' +
+        '<span class="c">' + formatKc(c.cena) + '</span></button>';
+    }).join('');
+    $('label').textContent = 'Měsíc s kapesným';
+    $('bar').style.width = '0';
+    hlavicka();
+    ukaz('s-cil');
+  }
+  $('cile').addEventListener('click', function (e) {
+    var b = e.target.closest('.volba'); if (!b) return;
+    s.cil = window.CILE[Number(b.dataset.i)];
+    krokOdlozit();
+  });
+
+  // --- 2. odložit
+  function krokOdlozit() {
+    var chybi = s.cil.cena - s.cil.nasporeno;
+    $('odlozitText').textContent = 'Na ' + s.cil.nazev.toLowerCase() + ' ti chybí ' + formatKc(chybi) +
+      '. Peníze, které odložíš hned na začátku, už nemůžeš omylem utratit.';
+    $('castky').innerHTML = window.ODLOZIT_NA_ZACATKU.map(function (c) {
+      return '<button type="button" data-c="' + c + '" aria-pressed="false">' + kc.format(c) + '</button>';
+    }).join('');
+    $('odlozitBtn').disabled = true;
+    ukaz('s-odlozit');
+  }
+  $('castky').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    $('castky').querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    s.odlozeno = Number(b.dataset.c);
+    $('odlozitBtn').disabled = false;
+    $('odlozitBtn').textContent = 'Odložit ' + formatKc(s.odlozeno) + ' a začít';
+  });
+  $('odlozitBtn').addEventListener('click', function () {
+    s.prasatko = s.odlozeno;
+    s.penezenka = window.KAPESNE - s.odlozeno;
+    s.krok = 0;
+    krokUdalost();
+  });
+
+  // --- 3. události
+  function zaplat(cena, kategorie, popis) {
+    if (cena <= 0) return;
+    var zPen = Math.min(cena, s.penezenka);
+    var zPra = cena - zPen;
+    s.penezenka -= zPen;
+    s.prasatko -= zPra;
+    if (zPra > 0) s.zPrasatka.push({ popis: popis, castka: zPra });
+    if (kategorie) s.utraty[kategorie] = (s.utraty[kategorie] || 0) + cena;
+  }
+
+  function krokUdalost() {
+    var u = U[s.krok];
+    $('label').textContent = 'Týden ' + u.tyden + ' ze 4';
+    $('bar').style.width = (s.krok / U.length * 100) + '%';
+    $('tyden').textContent = u.typ === 'prijem' ? 'Peníze navíc!' : (u.typ === 'povinne' ? 'Tohle se musí zaplatit' : 'Co uděláš?');
+    $('udIkona').textContent = u.ikona;
+    $('udText').textContent = u.text;
+    $('udZprava').hidden = true;
+    var moznosti;
+    if (u.typ === 'povinne') moznosti = [{ text: 'Zaplatit', cena: u.cena, kategorie: u.kategorie }];
+    else moznosti = u.moznosti;
+
+    $('udVolby').innerHTML = moznosti.map(function (m, i) {
+      var cena = m.cena || 0, pozn = '', disabled = false;
+      if (u.typ !== 'prijem' && cena > s.penezenka) {
+        if (cena <= s.penezenka + s.prasatko) pozn = 'V peněžence nemáš dost – ' + formatKc(cena - s.penezenka) + ' vezmeš z prasátka';
+        else { pozn = 'Na tohle nemáš dost peněz'; disabled = true; }
+      }
+      var vpravo = u.typ === 'prijem'
+        ? (m.doPrasatka ? '🐷 +' + formatKc(m.doPrasatka) : '')
+        : (cena ? '−' + formatKc(cena) : 'zdarma');
+      return '<button class="volba" data-i="' + i + '"' + (disabled ? ' disabled' : '') + '>' +
+        '<span class="t">' + esc(m.text) + (pozn ? '<span class="pozn">' + esc(pozn) + '</span>' : '') + '</span>' +
+        '<span class="c">' + vpravo + '</span></button>';
+    }).join('');
+    hlavicka();
+    ukaz('s-udalost');
+    $('udVolby').dataset.moznosti = JSON.stringify(moznosti);
+  }
+
+  $('udVolby').addEventListener('click', function (e) {
+    var b = e.target.closest('.volba'); if (!b || b.disabled) return;
+    var u = U[s.krok];
+    var m = JSON.parse($('udVolby').dataset.moznosti)[Number(b.dataset.i)];
+    if (u.typ === 'prijem') {
+      s.prasatko += m.doPrasatka;
+      s.penezenka += u.castka - m.doPrasatka;
+    } else {
+      zaplat(m.cena || 0, m.kategorie, u.text);
+    }
+    s.krok++;
+    if (s.krok < U.length) krokUdalost(); else krokZbytek();
+  });
+
+  // --- 4. zbytek
+  function krokZbytek() {
+    $('bar').style.width = '100%';
+    $('label').textContent = 'Konec měsíce';
+    hlavicka();
+    if (s.penezenka <= 0) { vysledek(); return; }
+    $('zbytekText').textContent = 'V peněžence ti zbylo ' + formatKc(s.penezenka) + '. Co s nimi uděláš?';
+    ukaz('s-zbytek');
+  }
+  $('zbytekPrasatko').addEventListener('click', function () { s.prasatko += s.penezenka; s.penezenka = 0; vysledek(); });
+  $('zbytekNechat').addEventListener('click', vysledek);
+
+  // --- 5. výsledek
+  function vysledek() {
+    hlavicka();
+    $('label').textContent = 'Výsledek';
+    var c = s.cil, celkem = c.nasporeno + s.prasatko;
+    $('cilNadpis').textContent = c.ikona + ' ' + c.nazev + ' za ' + formatKc(c.cena);
+    var a = Math.min(c.nasporeno / c.cena, 1) * 100;
+    var b = Math.max(Math.min(celkem / c.cena, 1) * 100 - a, 0);
+    $('postupA').style.width = a + '%';
+    $('postupB').style.width = b + '%';
+    $('postupText').textContent = 'Předtím ' + formatKc(c.nasporeno) + ' + tento měsíc ' + formatKc(s.prasatko) + ' = ' + formatKc(celkem);
+    var ok = celkem >= c.cena;
+    $('cilVysledek').className = 'vysl-cil ' + (ok ? 'ok' : 'ne');
+    $('cilVysledek').textContent = ok ? 'Máš na to! 🎉' : 'Ještě chybí ' + formatKc(c.cena - celkem);
+
+    var kat = Object.keys(s.utraty);
+    var suma = kat.reduce(function (x, k) { return x + s.utraty[k]; }, 0);
+    $('utraty').innerHTML = kat.length
+      ? kat.sort(function (x, y) { return s.utraty[y] - s.utraty[x]; }).map(function (k) {
+          return '<div class="radek"><span>' + esc(window.KATEGORIE[k] || k) + '</span><b>' + formatKc(s.utraty[k]) + '</b></div>';
+        }).join('') + '<div class="radek"><span><b>Celkem</b></span><b>' + formatKc(suma) + '</b></div>'
+      : '<p>Tento měsíc jsi neutratil/a skoro nic.</p>';
+
+    var t;
+    if (s.zPrasatka.length) {
+      t = '<strong>Část peněz jsi musel/a vzít z prasátka.</strong> Proto se vyplatí mít rezervu na věci, které přijdou nečekaně – a hlídat drobné útraty na začátku měsíce.';
+    } else if (s.odlozeno > 0) {
+      t = '<strong>Odložit peníze hned na začátku funguje.</strong> Co je v prasátku, se neztratí v drobných útratách.';
+    } else {
+      t = '<strong>Zkus příště odložit něco hned na začátku.</strong> Peníze, které zůstanou v peněžence, se snadno rozkutálejí.';
+    }
+    $('ponauceni').innerHTML = t;
+    ukaz('s-vysledek');
+  }
+
+  $('againBtn').addEventListener('click', krokCil);
+  krokCil();
+})();
+</script>
+</body>
+</html>
